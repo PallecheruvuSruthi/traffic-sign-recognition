@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Intelligent Traffic Sign Recognition web application using Convolutional Neural Networks (CNN) for real-time classification, camera capture, and image analysis.">
+  <title>Intelligent Traffic Sign Recognition | CNN Classification</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Top Navigation / Header -->
+    <header class="app-header">
+      <div class="header-container">
+        <div class="brand-group">
+          <div class="brand-icon" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 22 20 2 20 12 2"></polygon>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </div>
+          <div>
+            <h1 class="header-title">Intelligent Traffic Sign Recognition</h1>
+            <p class="header-subtitle">CNN-Based Traffic Sign Classification</p>
+          </div>
+        </div>
+
+        <div class="header-status">
+          <div id="model-status-indicator" class="status-pill status-neutral" title="Status of the trained CNN model">
+            <span class="status-dot"></span>
+            <span id="model-status-text">Checking Model Status...</span>
+          </div>
+          <button id="btn-open-catalog" class="btn btn-sm btn-outline" type="button" aria-haspopup="dialog">
+            Browse 43 Classes
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="main-content">
+      <div class="content-container">
+
+        <!-- Global Alert / Notification Box -->
+        <div id="global-alert" class="alert-banner hidden" role="alert" aria-live="polite">
+          <div class="alert-icon" id="alert-icon" aria-hidden="true"></div>
+          <div class="alert-body">
+            <h4 class="alert-title" id="alert-title">Notice</h4>
+            <p class="alert-message" id="alert-message"></p>
+          </div>
+          <button type="button" id="btn-close-alert" class="alert-close" aria-label="Dismiss alert">&times;</button>
+        </div>
+
+        <div class="workspace-grid">
+          <!-- LEFT COLUMN: Input Controls & Live Preview -->
+          <section class="card input-card" aria-labelledby="input-section-title">
+            <div class="card-header">
+              <h2 id="input-section-title" class="card-title">Image Input Source</h2>
+              <!-- Tab Selector -->
+              <div class="tab-group" role="tablist" aria-label="Input Method">
+                <button id="tab-upload" class="tab-button active" role="tab" aria-selected="true" aria-controls="pane-upload">
+                  Upload Image
+                </button>
+                <button id="tab-camera" class="tab-button" role="tab" aria-selected="false" aria-controls="pane-camera">
+                  Live Camera
+                </button>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <!-- TAB 1: File Upload Pane -->
+              <div id="pane-upload" class="tab-pane active" role="tabpanel" aria-labelledby="tab-upload">
+                <div id="drop-zone" class="drop-zone" tabindex="0" role="region" aria-label="File Upload Drop Zone">
+                  <div class="drop-zone-content">
+                    <div class="upload-icon" aria-hidden="true">
+                      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                      </svg>
+                    </div>
+                    <p class="drop-text-primary">Drag & drop a traffic sign image here</p>
+                    <p class="drop-text-secondary">or click to browse your computer</p>
+                    <button type="button" id="btn-browse-trigger" class="btn btn-secondary btn-sm">
+                      Select Image File
+                    </button>
+                    <input type="file" id="file-input" accept=".jpg,.jpeg,.png,.webp,.ppm" class="visually-hidden" aria-label="Upload traffic sign image">
+                    <div class="drop-zone-meta">
+                      Supported: JPG, PNG, WebP, PPM &bull; Max 10 MB
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TAB 2: Camera Pane -->
+              <div id="pane-camera" class="tab-pane hidden" role="tabpanel" aria-labelledby="tab-camera">
+                <div class="camera-wrapper">
+                  <!-- Camera Inactive View -->
+                  <div id="camera-prompt" class="camera-prompt">
+                    <div class="camera-icon" aria-hidden="true">
+                      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                        <circle cx="12" cy="13" r="4"></circle>
+                      </svg>
+                    </div>
+                    <p class="camera-prompt-text">Access your camera to capture live traffic signs.</p>
+                    <p class="camera-note">Note: Camera access requires <code>localhost</code> or a secure <code>HTTPS</code> connection.</p>
+                    <button type="button" id="btn-open-camera" class="btn btn-primary">
+                      Open Camera
+                    </button>
+                  </div>
+
+                  <!-- Live Camera Feed (Hidden initially) -->
+                  <div id="camera-feed-container" class="camera-feed-container hidden">
+                    <div class="video-container">
+                      <video id="camera-video" playsinline autoplay muted aria-label="Live camera feed"></video>
+                      <div class="camera-overlay-target" aria-hidden="true">
+                        <span class="guide-box"></span>
+                        <span class="guide-text">Align sign within square</span>
+                      </div>
+                    </div>
+                    <div class="camera-actions">
+                      <button type="button" id="btn-capture-image" class="btn btn-primary">
+                        Capture Image
+                      </button>
+                      <button type="button" id="btn-stop-camera" class="btn btn-outline">
+                        Stop Camera
+                      </button>
+                    </div>
+                  </div>
+
+                  <canvas id="camera-canvas" class="visually-hidden"></canvas>
+                </div>
+              </div>
+
+              <!-- Selected Image Preview Section -->
+              <div id="preview-section" class="preview-section hidden">
+                <div class="section-subheading">
+                  <span>Selected Image for Analysis</span>
+                  <button type="button" id="btn-clear-preview" class="btn-text btn-text-danger" title="Remove selected image">
+                    Remove
+                  </button>
+                </div>
+                <div class="preview-box">
+                  <div class="preview-image-wrapper">
+                    <img id="image-preview" src="" alt="Selected image preview">
+                  </div>
+                  <div class="preview-details">
+                    <p class="preview-filename" id="preview-filename">image.png</p>
+                    <div class="preview-meta-grid">
+                      <div>
+                        <span class="meta-label">Dimensions:</span>
+                        <span class="meta-val" id="preview-dimensions">--</span>
+                      </div>
+                      <div>
+                        <span class="meta-label">File Size:</span>
+                        <span class="meta-val" id="preview-size">--</span>
+                      </div>
+                      <div>
+                        <span class="meta-label">Source:</span>
+                        <span class="meta-val" id="preview-source">Uploaded File</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="action-bar">
+                <button type="button" id="btn-recognize" class="btn btn-primary btn-lg btn-block" disabled>
+                  <span class="btn-text-label">Recognize Traffic Sign</span>
+                  <span class="btn-spinner hidden" aria-hidden="true"></span>
+                </button>
+                <button type="button" id="btn-reset" class="btn btn-outline btn-block">
+                  Reset Everything
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <!-- RIGHT COLUMN: Recognition Results & Explanations -->
+          <section class="card result-card-container" aria-labelledby="results-section-title">
+            <div class="card-header">
+              <h2 id="results-section-title" class="card-title">Recognition Results</h2>
+              <span id="prediction-timestamp" class="meta-timestamp"></span>
+            </div>
+
+            <div class="card-body">
+              <!-- Placeholder State (Before Recognition) -->
+              <div id="result-placeholder" class="result-placeholder">
+                <div class="placeholder-icon" aria-hidden="true">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
+                </div>
+                <h3 class="placeholder-title">No Sign Analyzed Yet</h3>
+                <p class="placeholder-desc">
+                  Select an image or capture one using your camera, then click <strong>"Recognize Traffic Sign"</strong> to run the Convolutional Neural Network.
+                </p>
+              </div>
+
+              <!-- Loading State -->
+              <div id="loading-state" class="loading-state hidden" aria-live="polite">
+                <div class="spinner"></div>
+                <h3 class="loading-title">Analyzing Image with CNN</h3>
+                <p class="loading-desc">Pre-processing tensor, running convolutional feature maps, and evaluating softmax probabilities...</p>
+              </div>
+
+              <!-- Model Unavailable Banner -->
+              <div id="model-unavailable-card" class="model-unavailable-card hidden">
+                <div class="warning-icon" aria-hidden="true">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                </div>
+                <h3 class="warning-heading">Model Not Installed Yet</h3>
+                <p class="warning-body" id="model-unavailable-message">
+                  Traffic sign recognition is not available yet because a compatible trained model has not been installed. Please add a trained model and try again.
+                </p>
+                <div class="training-instructions">
+                  <strong>How to train or initialize the model:</strong>
+                  <ol>
+                    <li>Open PowerShell or terminal in the project folder: <code>c:\Desktop\miniproject</code></li>
+                    <li>For a pipeline verification dry-run on seed crops:
+                      <pre><code>python train.py --dry-run-seed</code></pre>
+                    </li>
+                    <li>For full benchmark training with real-world GTSRB data:
+                      <pre><code>python train.py --dataset-path dataset/train --epochs 15</code></pre>
+                    </li>
+                  </ol>
+                </div>
+              </div>
+
+              <!-- Active Result Section -->
+              <div id="result-display" class="result-display hidden">
+                <!-- Class Header & Badges -->
+                <div class="prediction-header">
+                  <div class="prediction-main">
+                    <div class="badge-row">
+                      <span id="res-class-id" class="badge badge-accent">Class #--</span>
+                      <span id="res-category" class="badge badge-neutral">Category</span>
+                    </div>
+                    <h3 id="res-sign-name" class="prediction-title">--</h3>
+                  </div>
+                </div>
+
+                <!-- Confidence Score Meter -->
+                <div class="confidence-container">
+                  <div class="confidence-header">
+                    <span class="confidence-label">Model Confidence</span>
+                    <span id="res-confidence-pct" class="confidence-percentage">0.0%</span>
+                  </div>
+                  <div class="progress-bar-bg" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="confidence-progressbar">
+                    <div id="confidence-bar" class="progress-bar-fill" style="width: 0%"></div>
+                  </div>
+                </div>
+
+                <!-- Uncertainty Warning (if confidence is below threshold) -->
+                <div id="res-uncertainty-banner" class="uncertainty-banner hidden" role="alert">
+                  <div class="alert-icon-sm" aria-hidden="true">&#9888;</div>
+                  <div>
+                    <strong class="uncertainty-title">Low Confidence / Ambiguous Detection</strong>
+                    <p id="res-uncertainty-text" class="uncertainty-body">
+                      The model's probability for this prediction is low. The image may not depict a recognized traffic sign, or may be blurry, tilted, or cropped.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Detail Blocks -->
+                <div class="detail-block">
+                  <h4 class="detail-label">Sign Description & Meaning</h4>
+                  <p id="res-description" class="detail-text">--</p>
+                </div>
+
+                <div class="detail-block">
+                  <h4 class="detail-label">Required Driver Action</h4>
+                  <div class="action-callout">
+                    <p id="res-action" class="action-text">--</p>
+                  </div>
+                </div>
+
+                <!-- Top 3 Candidates Breakdown -->
+                <div class="detail-block">
+                  <h4 class="detail-label">Top Class Probabilities</h4>
+                  <div id="top-candidates-list" class="candidates-list">
+                    <!-- Injected via JavaScript -->
+                  </div>
+                </div>
+
+                <!-- ML Limitations Notice -->
+                <div class="ml-notice">
+                  <div class="notice-icon" aria-hidden="true">&bull;</div>
+                  <p class="notice-text">
+                    <strong>Machine Learning Note:</strong> Closed-set softmax classifiers distribute 100% of probability across their 43 known classes. Arbitrary non-traffic images can sometimes be assigned to whichever sign shares visual edges or color palettes. A dedicated object localization detector (e.g. YOLO) is recommended in production to reject negative backgrounds prior to classification.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <!-- Modal: 43 Sign Reference Catalog -->
+    <div id="catalog-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="catalog-modal-title">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h3 id="catalog-modal-title" class="modal-title">43 GTSRB Traffic Sign Class Catalog</h3>
+          <button type="button" id="btn-close-catalog" class="modal-close" aria-label="Close dialog">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="catalog-intro">
+            The canonical 43 classes defined by the German Traffic Sign Recognition Benchmark (GTSRB) and mirrored in this project's dataset reference.
+          </p>
+          <div class="catalog-search-bar">
+            <input type="search" id="catalog-search" placeholder="Search by sign name, class ID, or category..." aria-label="Search catalog">
+          </div>
+          <div id="catalog-grid" class="catalog-grid">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="btn-modal-dismiss" class="btn btn-secondary">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Application Footer -->
+    <footer class="app-footer">
+      <div class="footer-container">
+        <p>Intelligent Traffic Sign Recognition &bull; Final-Year Mini Project &bull; CNN Architecture &amp; Flask</p>
+        <p class="footer-subtext">Ground Truth: 43 Standard Classes &bull; Localhost &amp; HTTPS Ready</p>
+      </div>
+    </footer>
+  </div>
+
+  <script src="/static/js/script.js"></script>
+</body>
+</html>

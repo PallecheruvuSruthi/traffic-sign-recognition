@@ -1,0 +1,10 @@
+{
+  "image_size": [
+    48,
+    48
+  ],
+  "normalization": "div_255",
+  "num_classes": 43,
+  "confidence_threshold": 0.80,
+  "is_developer_seed_dry_run": true
+}
